@@ -1,7 +1,7 @@
 export const siteConfig = {
   // Site metadata
-  name: 'Kids Items Marketplace',
-  description: 'Buy and sell quality used children\'s items',
+  name: 'Маркет детских вещей',
+  description: 'Покупайте и продавайте качественные детские товары',
   url: 'https://dimasmagadan.github.io/sale',
   
   // Contact information

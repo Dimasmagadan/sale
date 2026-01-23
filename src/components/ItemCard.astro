@@ -1,4 +1,6 @@
 ---
+import { siteConfig } from '../config/site.config';
+
 interface Props {
   slug: string;
   title: string;
@@ -10,10 +12,11 @@ interface Props {
 
 const { slug, title, price, image, condition, availability } = Astro.props;
 const isAvailable = availability === 'available';
+const basePath = siteConfig.basePath || '';
 ---
 
 <article class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
-  <a href={`/items/${slug}`} class="block relative">
+  <a href={`${basePath}/items/${slug}`} class="block relative">
     <div class="aspect-square overflow-hidden bg-slate-100">
       <img 
         src={image} 
@@ -25,14 +28,14 @@ const isAvailable = availability === 'available';
     {!isAvailable && (
       <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
         <span class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg">
-          SOLD
+          Продано
         </span>
       </div>
     )}
   </a>
   
   <div class="p-4 flex-1 flex flex-col">
-    <a href={`/items/${slug}`} class="block">
+    <a href={`${basePath}/items/${slug}`} class="block">
       <h3 class="font-semibold text-lg text-slate-800 mb-2 hover:text-blue-600 transition-colors line-clamp-2">
         {title}
       </h3>
@@ -41,7 +44,7 @@ const isAvailable = availability === 'available';
     <div class="mt-auto space-y-2">
       <div class="flex items-center justify-between">
         <span class="text-2xl font-bold text-blue-600">
-          ${price}
+          ₽{price}
         </span>
         <span class="text-sm text-slate-600 bg-slate-100 px-2 py-1 rounded">
           {condition}
@@ -49,14 +52,14 @@ const isAvailable = availability === 'available';
       </div>
       
       <a 
-        href={`/items/${slug}`}
+        href={`${basePath}/items/${slug}`}
         class={`block w-full text-center py-2 rounded-lg font-medium transition-colors ${
           isAvailable 
             ? 'bg-blue-500 hover:bg-blue-600 text-white' 
             : 'bg-slate-300 text-slate-500 cursor-not-allowed'
         }`}
       >
-        {isAvailable ? 'View Details' : 'Sold Out'}
+        {isAvailable ? 'Подробнее' : 'Продано'}
       </a>
     </div>
   </div>
