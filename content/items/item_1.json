@@ -1,0 +1,12 @@
+{
+  "title": "Кокон",
+  "price": 2000,
+  "description": "Кокон для сна и отдыха детей.\nКрасивый, удобный. Полный комплект - кокон, матрасик, подушка.\nСостояние отличное, как новый.",
+  "condition": "Как новый",
+  "ageRange": "0+",
+  "images": [
+    "/images/items/item_1_1.jpg",
+    "/images/items/item_1_2.jpg"
+  ],
+  "availability": "available"
+}

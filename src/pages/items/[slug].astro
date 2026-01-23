@@ -28,8 +28,10 @@ const { slug } = Astro.params;
 const { item } = Astro.props;
 
 const isAvailable = item.availability === 'available';
-const images = item.images || [];
 const basePath = siteConfig.basePath || '';
+const images = (item.images || []).map((img: string) => 
+  img.startsWith('http') ? img : `${basePath}${img}`
+);
 
 // Generate Telegram link with pre-filled message
 const itemUrl = `${siteConfig.url}${basePath}/items/${slug}`;

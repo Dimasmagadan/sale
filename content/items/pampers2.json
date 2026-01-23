@@ -1,0 +1,12 @@
+{
+  "title": "Памперс 2",
+  "price": 2000,
+  "description": "Упаковка памперсов 2\nВ подарок открытая упаковка памперсов 3.",
+  "condition": "Новый",
+  "ageRange": "0+",
+  "images": [
+    "/images/items/IMG_2670.jpeg",
+    "/images/items/IMG_2672.jpeg"
+  ],
+  "availability": "available"
+}
