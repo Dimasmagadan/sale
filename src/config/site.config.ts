@@ -1,13 +1,13 @@
 export const siteConfig = {
   // Site metadata
-  name: 'Маркет детских вещей',
-  description: 'Покупайте и продавайте качественные детские товары',
+  name: 'Распродажа детских вещей',
+  description: 'Покупайте качественные детские товары',
   url: 'https://dimasmagadan.github.io/sale',
   
   // Contact information
   telegram: {
-    username: 'your_telegram_username',
-    link: 'https://t.me/your_telegram_username'
+    username: 'dimasmagadan',
+    link: 'https://t.me/dimasmagadan'
   },
   
   // Theme configuration

@@ -30,12 +30,20 @@ const { item } = Astro.props;
 const isAvailable = item.availability === 'available';
 const images = item.images || [];
 const basePath = siteConfig.basePath || '';
+
+// Generate Telegram link with pre-filled message
+const itemUrl = `${siteConfig.url}${basePath}/items/${slug}`;
+const telegramMessage = `Здравствуйте, хочу купить "${item.title}"\n${itemUrl}\n`;
+const telegramLink = `https://t.me/${siteConfig.telegram.username}?text=${encodeURIComponent(telegramMessage)}`;
+
+// Generate absolute URL for OG image
+const ogImage = images[0]?.startsWith('http') ? images[0] : `${siteConfig.url}${images[0]}`;
 ---
 
 <Layout 
   title={item.title} 
   description={item.description.substring(0, 160)}
-  image={images[0]}
+  image={ogImage}
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
     <!-- Breadcrumb -->
@@ -54,11 +62,11 @@ const basePath = siteConfig.basePath || '';
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
       <!-- Image Gallery -->
       <div class="space-y-4">
-        <div class="relative aspect-square rounded-lg overflow-hidden bg-slate-100 shadow-lg">
+        <div class="relative aspect-square rounded-lg overflow-hidden bg-slate-100 shadow-lg cursor-pointer" id="main-image-container">
           <img 
             src={images[0]} 
             alt={item.title}
-            class="w-full h-full object-cover"
+            class="w-full h-full object-cover hover:scale-105 transition-transform"
             id="main-image"
           />
           {!isAvailable && (
@@ -135,13 +143,13 @@ const basePath = siteConfig.basePath || '';
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
             <h3 class="font-semibold text-lg text-slate-900">Заинтересовал товар?</h3>
             <p class="text-slate-700">
-              Напишите нам в Telegram, чтобы задать вопросы или договориться о встрече.
+              Напишите в Telegram, чтобы задать вопросы или договориться о встрече.
             </p>
             <a 
-              href={siteConfig.telegram.link}
+              href={telegramLink}
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors w-full justify-center text-lg shadow-md hover:shadow-lg"
+              class="inline-flex items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white px-6 py-3 rounded-lg font-semibold transition-colors w-full justify-center text-lg shadow-md hover:shadow-lg"
             >
               <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
@@ -167,11 +175,68 @@ const basePath = siteConfig.basePath || '';
   </div>
 </Layout>
 
+<!-- Image Modal -->
+<div 
+  id="image-modal" 
+  class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 cursor-pointer"
+>
+  <div class="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center" onclick="event.stopPropagation()">
+    <img 
+      id="modal-image" 
+      src="" 
+      alt="Full size image"
+      class="max-w-full max-h-full object-contain"
+    />
+    <button 
+      id="close-modal"
+      class="absolute top-4 right-4 bg-white hover:bg-gray-200 text-black rounded-full w-10 h-10 flex items-center justify-center transition-colors"
+      aria-label="Close"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
 <script>
   // Image gallery functionality - safe from XSS
   document.addEventListener('DOMContentLoaded', () => {
     const mainImage = document.getElementById('main-image') as HTMLImageElement | null;
-    if (!mainImage) return;
+    const mainImageContainer = document.getElementById('main-image-container') as HTMLElement | null;
+    const modal = document.getElementById('image-modal') as HTMLElement | null;
+    const modalImage = document.getElementById('modal-image') as HTMLImageElement | null;
+    const closeButton = document.getElementById('close-modal') as HTMLElement | null;
+    
+    if (!mainImage || !mainImageContainer || !modal || !modalImage) return;
+    
+    // Open modal on main image click
+    mainImageContainer.addEventListener('click', () => {
+      const imageSrc = mainImage.src;
+      if (imageSrc && modalImage) {
+        modalImage.src = imageSrc;
+        modal.classList.remove('hidden');
+      }
+    });
+    
+    // Close modal on background click
+    modal.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    
+    // Close modal on close button click
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        modal.classList.add('hidden');
+      });
+    }
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        modal.classList.add('hidden');
+      }
+    });
     
     const thumbnails = document.querySelectorAll('[data-image-src]');
     thumbnails.forEach(thumbnail => {
