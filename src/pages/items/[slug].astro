@@ -74,7 +74,8 @@ const images = item.images || [];
             {images.map((img, index) => (
               <button 
                 class="aspect-square rounded-lg overflow-hidden bg-slate-100 border-2 border-transparent hover:border-blue-500 transition-colors"
-                onclick={`document.getElementById('main-image').src='${img}'`}
+                data-image-src={img}
+                type="button"
               >
                 <img 
                   src={img} 
@@ -164,3 +165,21 @@ const images = item.images || [];
     </div>
   </div>
 </Layout>
+
+<script>
+  // Image gallery functionality - safe from XSS
+  document.addEventListener('DOMContentLoaded', () => {
+    const mainImage = document.getElementById('main-image') as HTMLImageElement | null;
+    if (!mainImage) return;
+    
+    const thumbnails = document.querySelectorAll('[data-image-src]');
+    thumbnails.forEach(thumbnail => {
+      thumbnail.addEventListener('click', () => {
+        const imageSrc = thumbnail.getAttribute('data-image-src');
+        if (imageSrc && mainImage) {
+          mainImage.src = imageSrc;
+        }
+      });
+    });
+  });
+</script>
