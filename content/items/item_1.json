@@ -6,7 +6,8 @@
   "ageRange": "0+",
   "images": [
     "/images/items/item_1_1.jpg",
-    "/images/items/item_1_2.jpg"
+    "/images/items/item_2.jpg",
+    "/images/items/item_3.jpg"
   ],
   "availability": "available"
 }
