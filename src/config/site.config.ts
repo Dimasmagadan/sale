@@ -36,8 +36,8 @@ export const siteConfig = {
   
   // Image CDN helper
   getImageUrl: (path: string, width?: number) => {
-    const fullUrl = path.startsWith('http') ? path : `https://dimasmagadan.github.io/sale${path}`;
-    const cdnUrl = `https://i0.wp.com/${fullUrl.replace(/^https?:\/\//, '')}`;
-    return width ? `${cdnUrl}?w=${width}` : cdnUrl;
+    // CDN disabled: return local/absolute path with basePath if needed
+    const fullUrl = path.startsWith('http') ? path : `${siteConfig.basePath}${path}`;
+    return fullUrl;
   },
 };

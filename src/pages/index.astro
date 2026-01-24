@@ -4,34 +4,56 @@ import ItemCard from '../components/ItemCard.astro';
 import { siteConfig } from '../config/site.config';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { ImageMetadata } from 'astro';
 
 const basePath = siteConfig.basePath || '';
 
+type Item = {
+  slug: string;
+  title: string;
+  price: number;
+  condition: string;
+  availability: 'available' | 'sold';
+  images?: string[];
+  [key: string]: any;
+};
+
 // Load all items from content/items directory
 const itemsDir = join(process.cwd(), 'content', 'items');
-const itemFiles = await readdir(itemsDir);
+const itemFiles: string[] = await readdir(itemsDir);
+
+// Map local assets by filename to ImageMetadata
+const modules = import.meta.glob('../assets/items/*', { eager: true }) as Record<string, any>;
+const assetsByName = new Map<string, ImageMetadata>();
+for (const [path, mod] of Object.entries(modules)) {
+  const meta = (mod as any).default ?? (mod as any);
+  const name = path.split('/').pop();
+  if (name) assetsByName.set(name, meta as ImageMetadata);
+}
 
 const items = await Promise.all(
   itemFiles
-    .filter(file => file.endsWith('.json'))
-    .map(async (file) => {
+    .filter((file: string) => file.endsWith('.json'))
+    .map(async (file: string) => {
       const content = await readFile(join(itemsDir, file), 'utf-8');
-      const item = JSON.parse(content);
+      const item: Item = JSON.parse(content);
       const slug = file.replace('.json', '');
-      const imageUrl = item.images?.[0] || '/placeholder.jpg';
+      const imagePath = item.images?.[0] || '/placeholder.jpg';
+      const fileName = typeof imagePath === 'string' ? imagePath.split('/').pop() : null;
+      const imageMeta = fileName ? assetsByName.get(fileName) : undefined;
       return {
-        slug,
         ...item,
-        image: siteConfig.getImageUrl(imageUrl, 600)
+        slug,
+        image: imageMeta
       };
     })
 );
 
 // Filter only available items
-const availableItems = items.filter(item => item.availability === 'available');
+const availableItems: Item[] = (items as Item[]).filter((item: Item) => item.availability === 'available');
 
 // Sort items by price
-const sortedItems = availableItems.sort((a, b) => a.price - b.price);
+const sortedItems: Item[] = availableItems.sort((a: Item, b: Item) => a.price - b.price);
 
 const availableCount = availableItems.length;
 const itemWord = availableCount === 1

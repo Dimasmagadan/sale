@@ -4,15 +4,16 @@ import Layout from '../../layouts/Layout.astro';
 import { siteConfig } from '../../config/site.config';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { ImageMetadata } from 'astro';
 
 export async function getStaticPaths() {
   const itemsDir = join(process.cwd(), 'content', 'items');
-  const itemFiles = await readdir(itemsDir);
+  const itemFiles: string[] = await readdir(itemsDir);
 
   return await Promise.all(
     itemFiles
-      .filter(file => file.endsWith('.json'))
-      .map(async (file) => {
+      .filter((file: string) => file.endsWith('.json'))
+      .map(async (file: string) => {
         const content = await readFile(join(itemsDir, file), 'utf-8');
         const item = JSON.parse(content);
         const slug = file.replace('.json', '');
@@ -30,26 +31,37 @@ const { item } = Astro.props;
 
 const isAvailable = item.availability === 'available';
 const basePath = siteConfig.basePath || '';
-// Generate different sizes for different uses
-const images = (item.images || []).map((img: string) => ({
-  full: siteConfig.getImageUrl(img, 1200),      // For main image
-  thumbnail: siteConfig.getImageUrl(img, 300),  // For gallery thumbnails
-  original: siteConfig.getImageUrl(img)          // For modal (no size limit)
-}));
+// Resolve images from src/assets/items without CDN
+// Build a map of all local assets to ImageMetadata by filename
+const modules = import.meta.glob('../../assets/items/*', { eager: true }) as Record<string, any>;
+const assetsByName = new Map<string, ImageMetadata>();
+for (const [path, mod] of Object.entries(modules)) {
+  const meta = (mod as any).default ?? (mod as any);
+  const name = path.split('/').pop();
+  if (name) assetsByName.set(name, meta as ImageMetadata);
+}
+
+const images = (item.images || []).map((img: string) => {
+  const fileName = typeof img === 'string' ? img.split('/').pop() : null;
+  const meta = fileName ? assetsByName.get(fileName) : undefined;
+  return {
+    full: meta,
+    thumbnail: meta,
+    original: meta,
+  };
+}).filter((v: { full: ImageMetadata | undefined }) => Boolean(v.full));
 
 // Generate Telegram link with pre-filled message
 const itemUrl = `${siteConfig.url}/items/${slug}`;
 const telegramMessage = `Здравствуйте, хочу купить "${item.title}"\n${itemUrl}\n`;
 const telegramLink = `https://t.me/${siteConfig.telegram.username}?text=${encodeURIComponent(telegramMessage)}`;
 
-// Generate absolute URL for OG image using CDN
-const ogImage = images[0]?.original || `${siteConfig.url}/placeholder.jpg`;
+// No CDN/OG override for now; Layout uses default image
 ---
 
 <Layout 
   title={item.title} 
   description={item.description.substring(0, 160)}
-  image={ogImage}
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
     <!-- Breadcrumb -->
@@ -69,12 +81,19 @@ const ogImage = images[0]?.original || `${siteConfig.url}/placeholder.jpg`;
       <!-- Image Gallery -->
       <div class="space-y-4">
         <div class="relative aspect-square rounded-lg overflow-hidden bg-slate-100 shadow-lg cursor-pointer" id="main-image-container">
-          <img 
-            src={images[0].full} 
-            alt={item.title}
-            class="w-full h-full object-cover hover:scale-105 transition-all duration-300"
-            id="main-image"
-          />
+          {images.length > 0 && images.map((img: { full: ImageMetadata }, i: number) => (
+            <div class="main-image w-full h-full" data-index={i} style={i === 0 ? '' : 'display:none'}>
+              <Image 
+                src={img.full} 
+                alt={item.title}
+                class="w-full h-full object-cover transition-all duration-300"
+                width={1200}
+                height={1200}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                sizes="(min-width: 1024px) 50vw, 100vw"
+              />
+            </div>
+          ))}
           <div id="image-loader" class="hidden absolute inset-0 bg-slate-200 bg-opacity-75 flex items-center justify-center">
             <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
           </div>
@@ -89,10 +108,10 @@ const ogImage = images[0]?.original || `${siteConfig.url}/placeholder.jpg`;
         
         {images.length > 1 && (
           <div class="grid grid-cols-4 gap-2">
-            {images.map((img, index) => (
+            {images.map((img: { thumbnail: ImageMetadata }, index: number) => (
               <button 
                 class="aspect-square rounded-lg overflow-hidden bg-slate-100 border-2 border-transparent hover:border-blue-500 transition-colors"
-                data-image-src={img.full}
+                data-target-index={index}
                 type="button"
               >
                 <Image 
@@ -102,6 +121,7 @@ const ogImage = images[0]?.original || `${siteConfig.url}/placeholder.jpg`;
                   width={200}
                   height={200}
                   loading="lazy"
+                  sizes="(min-width: 640px) 150px, 25vw"
                 />
               </button>
             ))}
@@ -239,71 +259,63 @@ const ogImage = images[0]?.original || `${siteConfig.url}/placeholder.jpg`;
 <script>
   // Image gallery functionality - safe from XSS
   document.addEventListener('DOMContentLoaded', () => {
-    const mainImage = document.getElementById('main-image') as HTMLImageElement | null;
     const mainImageContainer = document.getElementById('main-image-container') as HTMLElement | null;
     const modal = document.getElementById('image-modal') as HTMLElement | null;
     const modalImage = document.getElementById('modal-image') as HTMLImageElement | null;
     const closeButton = document.getElementById('close-modal') as HTMLElement | null;
     const loader = document.getElementById('image-loader') as HTMLElement | null;
-    
-    if (!mainImage || !mainImageContainer || !modal || !modalImage) return;
-    
+
+    if (!mainImageContainer || !modal || !modalImage) return;
+
+    const mainImages = Array.from(mainImageContainer.querySelectorAll('.main-image')) as HTMLElement[];
+    let activeIndex = 0;
+
     // Open modal on main image click
     mainImageContainer.addEventListener('click', () => {
-      const imageSrc = mainImage.src;
-      if (imageSrc && modalImage) {
+      const active = mainImages[activeIndex];
+      const img = active?.querySelector('img') as HTMLImageElement | null;
+      const imageSrc = img?.currentSrc || img?.src;
+      if (imageSrc) {
         modalImage.src = imageSrc;
         modal.classList.remove('hidden');
       }
     });
-    
+
     // Close modal on background click
     modal.addEventListener('click', () => {
       modal.classList.add('hidden');
     });
-    
+
     // Close modal on close button click
     if (closeButton) {
       closeButton.addEventListener('click', () => {
         modal.classList.add('hidden');
       });
     }
-    
+
     // Close modal on Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
         modal.classList.add('hidden');
       }
     });
-    
-    const thumbnails = document.querySelectorAll('[data-image-src]');
-    thumbnails.forEach(thumbnail => {
+
+    const thumbnails = document.querySelectorAll('[data-target-index]');
+    thumbnails.forEach((thumbnail) => {
       thumbnail.addEventListener('click', () => {
-        const fullImageSrc = thumbnail.getAttribute('data-image-src');
-        // Get the thumbnail img element inside the button
-        const thumbnailImg = thumbnail.querySelector('img');
-        
-        if (fullImageSrc && thumbnailImg && mainImage && loader && fullImageSrc !== mainImage.src) {
-          // Instantly show stretched thumbnail for immediate feedback
-          mainImage.src = thumbnailImg.src;
-          loader.classList.remove('hidden');
-          
-          // Preload full-size image
-          const fullImage = new Image();
-          
-          fullImage.onload = () => {
-            // Swap to full-size image
-            mainImage.src = fullImageSrc;
-            loader.classList.add('hidden');
-          };
-          
-          fullImage.onerror = () => {
-            // On error, hide loader but keep thumbnail
-            loader.classList.add('hidden');
-          };
-          
-          fullImage.src = fullImageSrc;
-        }
+        const indexAttr = thumbnail.getAttribute('data-target-index');
+        const targetIndex = indexAttr ? parseInt(indexAttr, 10) : NaN;
+        if (Number.isNaN(targetIndex) || targetIndex === activeIndex) return;
+
+        if (loader) loader.classList.remove('hidden');
+        // Hide current
+        const current = mainImages[activeIndex];
+        if (current) current.style.display = 'none';
+        // Show target
+        const next = mainImages[targetIndex];
+        if (next) next.style.display = '';
+        activeIndex = targetIndex;
+        if (loader) loader.classList.add('hidden');
       });
     });
   });
