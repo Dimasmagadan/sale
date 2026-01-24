@@ -132,8 +132,13 @@ const ogImage = images[0]?.startsWith('http') ? images[0] : `${siteConfig.url}${
           </div>
         </div>
 
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <p class="text-slate-700 font-medium">
+            <strong>📍 Местоположение:</strong> Все товары находятся на территории ЖК Босфор (Новороссийск, Алексея Матвейкина 1а). Доставки нет, только самовывоз.
+          </p>
+        </div>
+
         <div>
-          <h2 class="text-xl font-semibold text-slate-900 mb-3">Описание</h2>
           <div class="prose prose-slate max-w-none">
             {item.description.split('\n\n').map((paragraph: string) => (
               <p class="text-slate-700 mb-3 whitespace-pre-line">{paragraph}</p>
