@@ -29,17 +29,18 @@ const { item } = Astro.props;
 
 const isAvailable = item.availability === 'available';
 const basePath = siteConfig.basePath || '';
-const images = (item.images || []).map((img: string) => 
-  img.startsWith('http') ? img : `${basePath}${img}`
-);
+const images = (item.images || []).map((img: string) => {
+  const fullPath = img.startsWith('http') ? img : `${basePath}${img}`;
+  return siteConfig.getImageUrl(fullPath);
+});
 
 // Generate Telegram link with pre-filled message
 const itemUrl = `${siteConfig.url}/items/${slug}`;
 const telegramMessage = `Здравствуйте, хочу купить "${item.title}"\n${itemUrl}\n`;
 const telegramLink = `https://t.me/${siteConfig.telegram.username}?text=${encodeURIComponent(telegramMessage)}`;
 
-// Generate absolute URL for OG image
-const ogImage = images[0]?.startsWith('http') ? images[0] : `${siteConfig.url}${images[0]}`;
+// Generate absolute URL for OG image using CDN
+const ogImage = images[0] || `${siteConfig.url}/placeholder.jpg`;
 ---
 
 <Layout 
