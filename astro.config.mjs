@@ -15,6 +15,15 @@ export default defineConfig({
     defaultStrategy: 'hover'
   },
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    server: {
+      // Disable caching in dev to see changes immediately
+      middlewares: [
+        (req, res, next) => {
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          next();
+        }
+      ]
+    }
   }
 });
