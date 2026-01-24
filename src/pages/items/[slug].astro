@@ -30,9 +30,12 @@ const { item } = Astro.props;
 
 const isAvailable = item.availability === 'available';
 const basePath = siteConfig.basePath || '';
-const images = (item.images || []).map((img: string) => {
-  return siteConfig.getImageUrl(img);
-});
+// Generate different sizes for different uses
+const images = (item.images || []).map((img: string) => ({
+  full: siteConfig.getImageUrl(img, 1200),      // For main image
+  thumbnail: siteConfig.getImageUrl(img, 300),  // For gallery thumbnails
+  original: siteConfig.getImageUrl(img)          // For modal (no size limit)
+}));
 
 // Generate Telegram link with pre-filled message
 const itemUrl = `${siteConfig.url}/items/${slug}`;
@@ -40,7 +43,7 @@ const telegramMessage = `Здравствуйте, хочу купить "${item
 const telegramLink = `https://t.me/${siteConfig.telegram.username}?text=${encodeURIComponent(telegramMessage)}`;
 
 // Generate absolute URL for OG image using CDN
-const ogImage = images[0] || `${siteConfig.url}/placeholder.jpg`;
+const ogImage = images[0]?.original || `${siteConfig.url}/placeholder.jpg`;
 ---
 
 <Layout 
@@ -66,14 +69,15 @@ const ogImage = images[0] || `${siteConfig.url}/placeholder.jpg`;
       <!-- Image Gallery -->
       <div class="space-y-4">
         <div class="relative aspect-square rounded-lg overflow-hidden bg-slate-100 shadow-lg cursor-pointer" id="main-image-container">
-          <Image 
-            src={images[0]} 
+          <img 
+            src={images[0].full} 
             alt={item.title}
-            class="w-full h-full object-cover hover:scale-105 transition-transform"
-            width={800}
-            height={800}
+            class="w-full h-full object-cover hover:scale-105 transition-all duration-300"
             id="main-image"
           />
+          <div id="image-loader" class="hidden absolute inset-0 bg-slate-200 bg-opacity-75 flex items-center justify-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+          </div>
           {!isAvailable && (
             <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
               <span class="bg-red-600 text-white px-6 py-3 rounded-lg font-bold text-2xl">
@@ -88,11 +92,11 @@ const ogImage = images[0] || `${siteConfig.url}/placeholder.jpg`;
             {images.map((img, index) => (
               <button 
                 class="aspect-square rounded-lg overflow-hidden bg-slate-100 border-2 border-transparent hover:border-blue-500 transition-colors"
-                data-image-src={img}
+                data-image-src={img.full}
                 type="button"
               >
                 <Image 
-                  src={img} 
+                  src={img.thumbnail} 
                   alt={`${item.title} - Image ${index + 1}`}
                   class="w-full h-full object-cover"
                   width={200}
@@ -240,6 +244,7 @@ const ogImage = images[0] || `${siteConfig.url}/placeholder.jpg`;
     const modal = document.getElementById('image-modal') as HTMLElement | null;
     const modalImage = document.getElementById('modal-image') as HTMLImageElement | null;
     const closeButton = document.getElementById('close-modal') as HTMLElement | null;
+    const loader = document.getElementById('image-loader') as HTMLElement | null;
     
     if (!mainImage || !mainImageContainer || !modal || !modalImage) return;
     
@@ -274,9 +279,30 @@ const ogImage = images[0] || `${siteConfig.url}/placeholder.jpg`;
     const thumbnails = document.querySelectorAll('[data-image-src]');
     thumbnails.forEach(thumbnail => {
       thumbnail.addEventListener('click', () => {
-        const imageSrc = thumbnail.getAttribute('data-image-src');
-        if (imageSrc && mainImage) {
-          mainImage.src = imageSrc;
+        const fullImageSrc = thumbnail.getAttribute('data-image-src');
+        // Get the thumbnail img element inside the button
+        const thumbnailImg = thumbnail.querySelector('img');
+        
+        if (fullImageSrc && thumbnailImg && mainImage && loader && fullImageSrc !== mainImage.src) {
+          // Instantly show stretched thumbnail for immediate feedback
+          mainImage.src = thumbnailImg.src;
+          loader.classList.remove('hidden');
+          
+          // Preload full-size image
+          const fullImage = new Image();
+          
+          fullImage.onload = () => {
+            // Swap to full-size image
+            mainImage.src = fullImageSrc;
+            loader.classList.add('hidden');
+          };
+          
+          fullImage.onerror = () => {
+            // On error, hide loader but keep thumbnail
+            loader.classList.add('hidden');
+          };
+          
+          fullImage.src = fullImageSrc;
         }
       });
     });
