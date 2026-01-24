@@ -22,7 +22,7 @@ const items = await Promise.all(
       return {
         slug,
         ...item,
-        image: imageUrl.startsWith('http') ? imageUrl : `${basePath}${imageUrl}`
+        image: siteConfig.getImageUrl(imageUrl, 600)
       };
     })
 );

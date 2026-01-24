@@ -164,7 +164,7 @@ const ogImage = images[0]?.startsWith('http') ? images[0] : `${siteConfig.url}${
             {item.ozonUrl && (
               <div class="bg-amber-50 border border-amber-200 rounded-lg p-6">
                 <p class="text-slate-700 mb-3">
-                  Такой же, но новый на Ozon:
+                  Такой же, но новый:
                 </p>
                 <a 
                   href={item.ozonUrl}
@@ -175,7 +175,7 @@ const ogImage = images[0]?.startsWith('http') ? images[0] : `${siteConfig.url}${
                   <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54h2.72l2.12-2.72h-2.09zm-7.78-2.04l1.94 2.5h2.73L8.22 9.25H5.18z"/>
                   </svg>
-                  посмотреть на Ozon
+                  смотреть цену нового на Ozon
                 </a>
               </div>
             )}
@@ -183,7 +183,7 @@ const ogImage = images[0]?.startsWith('http') ? images[0] : `${siteConfig.url}${
         ) : (
           <div class="bg-slate-100 border border-slate-300 rounded-lg p-6">
             <p class="text-slate-700 text-center font-medium">
-              Этот товар уже продан. Посмотрите другие предложения на сайте!
+              Этот товар пока не доступен. Посмотрите другие предложения на сайте!
             </p>
             <a 
               href={`${basePath}/`}

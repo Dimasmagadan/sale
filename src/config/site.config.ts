@@ -33,4 +33,11 @@ export const siteConfig = {
   
   // GitHub Pages configuration
   basePath: '/sale',
+  
+  // Image CDN helper
+  getImageUrl: (path: string, width?: number) => {
+    const fullUrl = path.startsWith('http') ? path : `https://dimasmagadan.github.io/sale${path}`;
+    const cdnUrl = `https://i0.wp.com/${fullUrl.replace(/^https?:\/\//, '')}`;
+    return width ? `${cdnUrl}?w=${width}` : cdnUrl;
+  },
 };
