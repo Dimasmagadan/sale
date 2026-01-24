@@ -5,9 +5,9 @@
   "condition": "Как новый",
   "ageRange": "0-6 месяцев",
   "images": [
+    "/images/items/item_1_1.jpg",
     "/images/items/7395770627.webp",
     "/images/items/7355237977.webp",
-    "/images/items/item_1_1.jpg",
     "/images/items/item_2.jpg",
     "/images/items/item_3.jpg"
   ],

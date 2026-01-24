@@ -27,15 +27,13 @@ const items = await Promise.all(
     })
 );
 
-// Sort items: available first, then by price
-const sortedItems = items.sort((a, b) => {
-  if (a.availability !== b.availability) {
-    return a.availability === 'available' ? -1 : 1;
-  }
-  return a.price - b.price;
-});
+// Filter only available items
+const availableItems = items.filter(item => item.availability === 'available');
 
-const availableCount = items.filter(item => item.availability === 'available').length;
+// Sort items by price
+const sortedItems = availableItems.sort((a, b) => a.price - b.price);
+
+const availableCount = availableItems.length;
 const itemWord = availableCount === 1
   ? 'товар'
   : availableCount >= 2 && availableCount <= 4
@@ -59,7 +57,7 @@ const itemWord = availableCount === 1
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {availableItems.length === 0 ? (
         <div class="text-center py-12">
           <p class="text-lg text-[var(--color-text-light)]">Сейчас нет доступных товаров. Загляните позже!</p>
         </div>
