@@ -34,7 +34,7 @@ const images = (item.images || []).map((img: string) =>
 );
 
 // Generate Telegram link with pre-filled message
-const itemUrl = `${siteConfig.url}${basePath}/items/${slug}`;
+const itemUrl = `${siteConfig.url}/items/${slug}`;
 const telegramMessage = `Здравствуйте, хочу купить "${item.title}"\n${itemUrl}\n`;
 const telegramLink = `https://t.me/${siteConfig.telegram.username}?text=${encodeURIComponent(telegramMessage)}`;
 
@@ -142,23 +142,43 @@ const ogImage = images[0]?.startsWith('http') ? images[0] : `${siteConfig.url}${
         </div>
 
         {isAvailable ? (
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
-            <h3 class="font-semibold text-lg text-slate-900">Заинтересовал товар?</h3>
-            <p class="text-slate-700">
-              Напишите в Telegram, чтобы задать вопросы или договориться о встрече.
-            </p>
-            <a 
-              href={telegramLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white px-6 py-3 rounded-lg font-semibold transition-colors w-full justify-center text-lg shadow-md hover:shadow-lg"
-              onclick={`try{ym(106420786, 'reachGoal', 'telegram_click', '${slug}')}catch(e){}`}
-            >
-              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
-              </svg>
-              Связаться в Telegram
-            </a>
+          <div class="space-y-4">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
+              <h3 class="font-semibold text-lg text-slate-900">Заинтересовал товар?</h3>
+              <p class="text-slate-700">
+                Напишите в Telegram, чтобы задать вопросы или договориться о встрече.
+              </p>
+              <a 
+                href={telegramLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white px-6 py-3 rounded-lg font-semibold transition-colors w-full justify-center text-lg shadow-md hover:shadow-lg"
+                onclick={`try{ym(106420786, 'reachGoal', 'telegram_click', '${slug}')}catch(e){}`}
+              >
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                </svg>
+                Связаться в Telegram
+              </a>
+            </div>
+            {item.ozonUrl && (
+              <div class="bg-amber-50 border border-amber-200 rounded-lg p-6">
+                <p class="text-slate-700 mb-3">
+                  Такой же, но новый на Ozon:
+                </p>
+                <a 
+                  href={item.ozonUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors w-full justify-center text-lg shadow-md hover:shadow-lg"
+                >
+                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54h2.72l2.12-2.72h-2.09zm-7.78-2.04l1.94 2.5h2.73L8.22 9.25H5.18z"/>
+                  </svg>
+                  посмотреть на Ozon
+                </a>
+              </div>
+            )}
           </div>
         ) : (
           <div class="bg-slate-100 border border-slate-300 rounded-lg p-6">
